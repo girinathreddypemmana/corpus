@@ -10,12 +10,14 @@ package org.websocket.model;
  * @author girinathr
  */
 public class Item {
+	//fields
     private int id;
     private String name;
     private String status;
     private String type;
     private String description;
 
+	//setter and getter methods
     public Item() {
     }
     
