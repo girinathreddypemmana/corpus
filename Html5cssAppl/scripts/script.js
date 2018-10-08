@@ -8,3 +8,13 @@ $(function() {
         })
   }
 }); 
+
+function redirectToHome(){
+	window.location="home.html"
+}
+
+function redirectToPage(pageName){
+	var page = pageName+".html";
+	window.location=page;
+	
+}
