@@ -23,7 +23,7 @@ import javax.json.spi.JsonProvider;
 @ApplicationScoped
 public class SessionHandler {
     
-    private int deviceId = 0;
+    private int itemId = 0;
     private final Set<Session> sessions = new HashSet<>();
     private final Set<Item> devices = new HashSet<>();
     
@@ -45,9 +45,9 @@ public class SessionHandler {
     }
 
     public void addDevice(Item device) {
-        device.setId(deviceId);
+        device.setId(itemId);
         devices.add(device);
-        deviceId++;
+        itemId++;
         JsonObject addMessage = createAddMessage(device);
         sendToAllConnectedSessions(addMessage);
     }
