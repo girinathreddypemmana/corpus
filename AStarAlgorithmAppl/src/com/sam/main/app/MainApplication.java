@@ -6,7 +6,7 @@ import com.sam.algorithm.AStarAlgorithm;
 
 public class MainApplication {
 	public static void main(String[] args) {
-		 String workingDir = System.getProperty("user.dir");
-		new AStarAlgorithm().searchSmallCostPath(new File(workingDir+"\\input.txt"),new File(workingDir+"\\output.txt"));
+		String workingDir = System.getProperty("user.dir");
+		AStarAlgorithm.getInstance().searchSmallCostPath(new File(workingDir+"\\input.txt"),new File(workingDir+"\\output.txt"));
 	}
 }

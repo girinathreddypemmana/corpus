@@ -12,6 +12,23 @@ import java.util.Map;
 import java.util.Scanner;	
 
 public class AStarAlgorithm {
+	private static AStarAlgorithm aStarAlgorithm = null; 
+	  
+    // private constructor restricted to this class itself 
+    private AStarAlgorithm() 
+    { 
+       
+    } 
+  
+    // static method to create instance of Singleton class 
+    public static synchronized AStarAlgorithm getInstance() 
+    { 
+        if (aStarAlgorithm == null) 
+        	aStarAlgorithm = new AStarAlgorithm(); 
+  
+        return aStarAlgorithm; 
+    } 
+	
 	private static List<Character> wakableElements = Arrays.asList('.','@','X','*','^');
 	//private static char nonWakableElement = '~';
 	private static Map<Character, Integer> elementCostMap = setElementCostMap();
