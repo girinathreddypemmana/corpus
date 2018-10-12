@@ -28,7 +28,7 @@ public class AStarAlgorithm {
   
         return aStarAlgorithm; 
     } 
-	
+	    
 	private static List<Character> wakableElements = Arrays.asList('.','@','X','*','^');
 	//private static char nonWakableElement = '~';
 	private static Map<Character, Integer> elementCostMap = setElementCostMap();
@@ -155,6 +155,10 @@ public class AStarAlgorithm {
 					if (x2 == currentLineNo && y2 == j) {
 						isDestFind = true;
 						
+					}
+					if(y1 == cols-1){
+						findTheCostOfSaroundingTiles();
+						x1=x1+1;
 					}
 				}else{
 					if (myArray[currentLineNo][j] == 'X') {
