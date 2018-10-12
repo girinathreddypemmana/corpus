@@ -48,7 +48,7 @@ public class AStarAlgorithm {
 			}
 			//System.out.println("fileDataLinesList:"+fileDataLinesList.toString());
 			rows=fileDataLinesList.size();
-			System.out.println("rows:"+rows+",cols:"+cols);
+			//System.out.println("rows:"+rows+",cols:"+cols);
 			myArray = new char[rows][cols];
 			destArray = new char[rows][cols];
 			/*for (int i = 0; i < myArray.length; i++) {
@@ -73,7 +73,7 @@ public class AStarAlgorithm {
 				}
 				j++;
 			}
-			System.out.println("x1:y1->("+x1+":"+y1+")  x2:y2->("+x2+":"+y2+")");
+			//System.out.println("x1:y1->("+x1+":"+y1+")  x2:y2->("+x2+":"+y2+")");
 			/*for (int i = 0; i < rows; i++) {
 				for (int k = 0; k < cols; k++) {
 					System.out.print(myArray[i][k] +" ");
@@ -81,12 +81,12 @@ public class AStarAlgorithm {
 				System.out.println("\n");
 			}*/
 			findShortPath();
-			/*for (int i = 0; i < rows; i++) {
+			for (int i = 0; i < rows; i++) {
 				for (int k = 0; k < cols; k++) {
 					System.out.print(destArray[i][k] +" ");
 				}
 				System.out.println("\n");
-			}*/
+			}
 		}catch (Exception e) {
 			e.printStackTrace();
 		}finally {
@@ -111,20 +111,12 @@ public class AStarAlgorithm {
 	}
 
 	private void findShortPath() {
-		System.out.println("=============================================");
+		//System.out.println("=============================================");
 		int currentLineNo = 0;
 		Boolean isDestFind = false;
 		//Boolean isCurrentLineMoved = false;
 		for (; currentLineNo < rows;) {
-			if (currentLineNo == 44) {
-				//System.out.println(Arrays.toString(destArray));
-				System.out.println("currentLineNo:"+currentLineNo);
-			}
-			System.out.println("currentLineNo:"+currentLineNo);
 			for (int j = 0; j < cols; j++) {
-				if (j==49) {
-					System.out.println("col:"+cols);
-				}
 				if (!isDestFind) {
 					//System.out.println("isDestFind:"+isDestFind);
 					if (x1 == currentLineNo && y1 == j) {
@@ -163,7 +155,6 @@ public class AStarAlgorithm {
 				//isCurrentLineMoved = false;
 			}
 		}
-		
 	}
 
 	private void findTheCostOfSaroundingTiles() {
