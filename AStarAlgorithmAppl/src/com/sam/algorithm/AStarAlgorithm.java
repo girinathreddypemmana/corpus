@@ -9,75 +9,75 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Scanner;	
+import java.util.Scanner;
 
 public class AStarAlgorithm {
-	private static AStarAlgorithm aStarAlgorithm = null; 
-	  
-    // private constructor restricted to this class itself 
-    private AStarAlgorithm() 
-    { 
-       
-    } 
-  
-    // static method to create instance of Singleton class 
-    public static synchronized AStarAlgorithm getInstance() 
-    { 
-        if (aStarAlgorithm == null) 
-        	aStarAlgorithm = new AStarAlgorithm(); 
-  
-        return aStarAlgorithm; 
-    } 
-	    
-	private static List<Character> wakableElements = Arrays.asList('.','@','X','*','^');
-	//private static char nonWakableElement = '~';
+	private static AStarAlgorithm aStarAlgorithm = null;
+
+	// private constructor restricted to this class itself
+	private AStarAlgorithm() {
+
+	}
+
+	// static method to create instance of Singleton class
+	public static synchronized AStarAlgorithm getInstance() {
+		if (aStarAlgorithm == null)
+			aStarAlgorithm = new AStarAlgorithm();
+
+		return aStarAlgorithm;
+	}
+
+	private static List<Character> wakableElements = Arrays.asList('.', '@', 'X', '*', '^');
+	// private static char nonWakableElement = '~';
 	private static Map<Character, Integer> elementCostMap = setElementCostMap();
-	
-	Scanner sc  = null;
+
+	Scanner sc = null;
 	FileWriter fileWriter = null;
 	List<String> fileDataLinesList = null;
-	
+
 	char[][] myArray = null;
 	char[][] destArray = null;
 	int x1 = 0;
 	int x2 = 0;
 	int y1 = 0;
 	int y2 = 0;
-	int rows=0;
-	int cols=0;
+	int rows = 0;
+	int cols = 0;
 
+	// method to search small cost path
 	public void searchSmallCostPath(File largeMapFile, File targetFile) {
 		try {
-			//declare scanner pointing to source file to read content line by line
+			// declare scanner pointing to source file to read content line by
+			// line
 			sc = new Scanner(largeMapFile);
-			
+
 			fileWriter = new FileWriter(targetFile);
-			//read all lines and keep them in list
+			// read all lines and keep them in list
 			fileDataLinesList = new ArrayList<String>();
-			int j=0;
-			while(sc.hasNextLine()) {
+			int j = 0;
+			while (sc.hasNextLine()) {
 				String lineData = sc.nextLine();
 				fileDataLinesList.add(lineData.trim());
-				//System.out.println("lineData.trim():"+lineData.trim().length());
+				// System.out.println("lineData.trim():"+lineData.trim().length());
 				if (cols < lineData.trim().length()) {
-					cols=lineData.trim().length();
+					cols = lineData.trim().length();
 				}
 			}
-			//System.out.println("fileDataLinesList:"+fileDataLinesList.toString());
-			rows=fileDataLinesList.size();
-			//System.out.println("rows:"+rows+",cols:"+cols);
+			// System.out.println("fileDataLinesList:"+fileDataLinesList.toString());
+			rows = fileDataLinesList.size();
+			// System.out.println("rows:"+rows+",cols:"+cols);
 			myArray = new char[rows][cols];
 			destArray = new char[rows][cols];
-			/*for (int i = 0; i < myArray.length; i++) {
-				for (int k = 0; k < myArray.length; k++) {
-					System.out.print("("+i+","+k+")");
-				}
-				System.out.println("\n");
-			}*/
+			/*
+			 * for (int i = 0; i < myArray.length; i++) { for (int k = 0; k <
+			 * myArray.length; k++) { System.out.print("("+i+","+k+")"); }
+			 * System.out.println("\n"); }
+			 */
 			for (String string : fileDataLinesList) {
-				//System.out.println("string:"+string);
+				// System.out.println("string:"+string);
 				for (int i = 0; i < string.length(); i++) {
-				//System.out.println("i:"+j+"j:"+i+"char At:"+string.charAt(i));
+					// System.out.println("i:"+j+"j:"+i+"char
+					// At:"+string.charAt(i));
 					myArray[j][i] = string.charAt(i);
 					if (string.charAt(i) == 'X') {
 						x2 = j;
@@ -90,33 +90,34 @@ public class AStarAlgorithm {
 				}
 				j++;
 			}
-			//System.out.println("x1:y1->("+x1+":"+y1+")  x2:y2->("+x2+":"+y2+")");
-			/*for (int i = 0; i < rows; i++) {
-				for (int k = 0; k < cols; k++) {
-					System.out.print(myArray[i][k] +" ");
-				}
-				System.out.println("\n");
-			}*/
+			// System.out.println("x1:y1->("+x1+":"+y1+")
+			// x2:y2->("+x2+":"+y2+")");
+			/*
+			 * for (int i = 0; i < rows; i++) { for (int k = 0; k < cols; k++) {
+			 * System.out.print(myArray[i][k] +" "); } System.out.println("\n");
+			 * }
+			 */
 			findShortPath();
+			// display the map data
 			for (int i = 0; i < rows; i++) {
 				for (int k = 0; k < cols; k++) {
-					System.out.print(destArray[i][k] +" ");
+					System.out.print(destArray[i][k] + " ");
 				}
 				System.out.println("\n");
 			}
-		}catch (Exception e) {
+		} catch (Exception e) {
 			e.printStackTrace();
-		}finally {
-			if(sc != null) {
-				try {	
+		} finally {
+			if (sc != null) {
+				try {
 					sc.close();
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-				
+
 			}
-			if(fileWriter != null ) {
+			if (fileWriter != null) {
 				try {
 					fileWriter.close();
 				} catch (IOException e) {
@@ -127,66 +128,68 @@ public class AStarAlgorithm {
 		}
 	}
 
+	// this method finds the short path
 	private void findShortPath() {
-		//System.out.println("=============================================");
+		// System.out.println("=============================================");
 		int currentLineNo = 0;
 		Boolean isDestFind = false;
-		//Boolean isCurrentLineMoved = false;
+		// Boolean isCurrentLineMoved = false;
 		for (; currentLineNo < rows;) {
 			for (int j = 0; j < cols; j++) {
 				if (!isDestFind) {
-					//System.out.println("isDestFind:"+isDestFind);
+					// System.out.println("isDestFind:"+isDestFind);
 					if (x1 == currentLineNo && y1 == j) {
 						x1 = currentLineNo;
 						y1 = j;
 						destArray[currentLineNo][j] = '#';
 						findTheCostOfSaroundingTiles();
-					}else{
+					} else {
 						try {
 							destArray[currentLineNo][j] = myArray[currentLineNo][j];
-							if (j == cols-1 && currentLineNo == x1) {
-								x1=x1+1;
+							if (j == cols - 1 && currentLineNo == x1) {
+								x1 = x1 + 1;
 							}
 						} catch (Exception e) {
 							e.printStackTrace();
-							System.out.println("Exception:"+currentLineNo+",j:"+j);
+							System.out.println("Exception:" + currentLineNo + ",j:" + j);
 						}
 					}
 					if (x2 == currentLineNo && y2 == j) {
 						isDestFind = true;
-						
+
 					}
-					if(y1 == cols-1){
+					if (y1 == cols - 1) {
 						findTheCostOfSaroundingTiles();
-						x1=x1+1;
+						x1 = x1 + 1;
 					}
-				}else{
+				} else {
 					if (myArray[currentLineNo][j] == 'X') {
 						destArray[currentLineNo][j] = '#';
-					}else {
+					} else {
 						destArray[currentLineNo][j] = myArray[currentLineNo][j];
 					}
-					if (j == cols-1 ) {
-						x1=x1+1;
+					if (j == cols - 1) {
+						x1 = x1 + 1;
 					}
 				}
 			}
 			if (currentLineNo <= x1) {
 				currentLineNo++;
-				//isCurrentLineMoved = false;
+				// isCurrentLineMoved = false;
 			}
 		}
 	}
 
+	// this method finds the short path of each tile
 	private void findTheCostOfSaroundingTiles() {
-		int currentLineRight = findCostOfCurrentLineNext(x1,y1+1);
-		int currentLineLeft = findCostOfCurrentLineNext(x1,y1-1);
-		int nextLineSamePos = findCostOfCurrentLineNext(x1+1,y1);
-		int nextLineRight = findCostOfCurrentLineNext(x1+1,y1+1);
-		int nextLineLeft = findCostOfCurrentLineNext(x1+1,y1-1);
-		int prevLineSamePos = findCostOfCurrentLineNext(x1-1,y1);
-		int PrevLineRight = findCostOfCurrentLineNext(x1-1,y1+1);
-		int prevLineLeft = findCostOfCurrentLineNext(x1-1,y1-1);
+		int currentLineRight = findCostOfCurrentLineNext(x1, y1 + 1);
+		int currentLineLeft = findCostOfCurrentLineNext(x1, y1 - 1);
+		int nextLineSamePos = findCostOfCurrentLineNext(x1 + 1, y1);
+		int nextLineRight = findCostOfCurrentLineNext(x1 + 1, y1 + 1);
+		int nextLineLeft = findCostOfCurrentLineNext(x1 + 1, y1 - 1);
+		int prevLineSamePos = findCostOfCurrentLineNext(x1 - 1, y1);
+		int PrevLineRight = findCostOfCurrentLineNext(x1 - 1, y1 + 1);
+		int prevLineLeft = findCostOfCurrentLineNext(x1 - 1, y1 - 1);
 		List<Integer> list = new ArrayList<Integer>();
 		list.add(currentLineRight);
 		list.add(currentLineLeft);
@@ -198,51 +201,54 @@ public class AStarAlgorithm {
 		list.add(prevLineLeft);
 		int min = Collections.min(list);
 		if (currentLineRight == min) {
-			y1 = y1+1;
-		}else if (currentLineLeft == min) {
-			y1 = y1-1;
-		}else if (nextLineSamePos == min) {
-			x1 = x1+1;
-		}else if (nextLineRight == min) {
-			x1 = x1+1;
-			y1 = y1+1;
-		}else if (nextLineLeft == min) {
-			x1 = x1+1;
-			y1 = y1-1;
-		}else if (prevLineSamePos == min) {
-			x1 = x1-1;
-		}else if (PrevLineRight == min) {
-			x1 = x1-1;
-			y1 = y1+1;
-		} else if (prevLineLeft == min){
-			x1 = x1-1;
-			y1 = y1-1;
+			y1 = y1 + 1;
+		} else if (currentLineLeft == min) {
+			y1 = y1 - 1;
+		} else if (nextLineSamePos == min) {
+			x1 = x1 + 1;
+		} else if (nextLineRight == min) {
+			x1 = x1 + 1;
+			y1 = y1 + 1;
+		} else if (nextLineLeft == min) {
+			x1 = x1 + 1;
+			y1 = y1 - 1;
+		} else if (prevLineSamePos == min) {
+			x1 = x1 - 1;
+		} else if (PrevLineRight == min) {
+			x1 = x1 - 1;
+			y1 = y1 + 1;
+		} else if (prevLineLeft == min) {
+			x1 = x1 - 1;
+			y1 = y1 - 1;
 		}
 	}
 
+	// finding the distance from source to goal by using Manhattan distance
+	// formula
 	private int findCostOfCurrentLineNext(int i, int j) {
 		int cost = 0;
 		if (i == -1 || i >= rows || j == -1 || j >= cols) {
 			cost = 999999;
-		}else{
+		} else {
 			try {
 				char nextChar = myArray[i][j];
-				if(wakableElements.contains(nextChar)) {
+				if (wakableElements.contains(nextChar)) {
 					cost = elementCostMap.get(nextChar);
-					int distanceToGoal = Math.abs(i-x2) + Math.abs(j-y2);
+					int distanceToGoal = Math.abs(i - x2) + Math.abs(j - y2);
 					cost = cost + distanceToGoal;
-				}else{
+				} else {
 					cost = 999999;
 				}
-				
+
 			} catch (Exception e) {
 				e.printStackTrace();
-				System.out.println("Exception##findCostOfCurrentLineNext##i:"+i+",j:"+j);
+				System.out.println("Exception##findCostOfCurrentLineNext##i:" + i + ",j:" + j);
 			}
 		}
 		return cost;
 	}
 
+	// keeping elements and its values
 	private static Map<Character, Integer> setElementCostMap() {
 		Map<Character, Integer> map = new HashMap<>();
 		map.put('.', 1);
@@ -252,5 +258,5 @@ public class AStarAlgorithm {
 		map.put('^', 3);
 		return map;
 	}
-	
+
 }
