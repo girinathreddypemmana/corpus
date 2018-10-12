@@ -5,109 +5,88 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;	
 
 public class AStarAlgorithm {
-	private static List<Character> wakableElements = Arrays.asList('.','X','*','^');
+	private static List<Character> wakableElements = Arrays.asList('.','@','X','*','^');
 	//private static char nonWakableElement = '~';
 	private static Map<Character, Integer> elementCostMap = setElementCostMap();
-
-	/*
-	  Non-walkable: 
-	  N/A = Water (~)
-	------------------------  
-	  Walkable:
-	  1 = Flatlands (. or @ or X) 
-	  2 = Forest (*) 
-	  3 = Mountain (^)
-	 */
 	
 	Scanner sc  = null;
 	FileWriter fileWriter = null;
 	List<String> fileDataLinesList = null;
-	List<String> resultantfileDataLinesList = null;
-	Map<Integer,List<List<Integer>>> pathNumberFollowedTileMap = new HashMap<>();
-	Map<Integer,Long> pathNumberCostMap = new HashMap<>();
-	long totalLines = 0;
-	String firstLine;
-	String lastLine;
-	String currentLine;
-	String nextLine = null;
-	long cost = 0;
-	int nextLineStartIndex = 0;
-	long targetIndex = 0;
-	int path_1 = 0;
-	boolean isPathRemoved = false;
-	boolean pathFound = false;
+	
+	char[][] myArray = null;
+	char[][] destArray = null;
+	int x1 = 0;
+	int x2 = 0;
+	int y1 = 0;
+	int y2 = 0;
+	int rows=0;
+	int cols=0;
 
 	public void searchSmallCostPath(File largeMapFile, File targetFile) {
-		//String prevLine;
 		try {
 			//declare scanner pointing to source file to read content line by line
 			sc = new Scanner(largeMapFile);
 			
 			fileWriter = new FileWriter(targetFile);
 			//read all lines and keep them in list
-			fileDataLinesList = new ArrayList<>();
-			resultantfileDataLinesList = new ArrayList<>();
+			fileDataLinesList = new ArrayList<String>();
+			int j=0;
 			while(sc.hasNextLine()) {
 				String lineData = sc.nextLine();
-				if(lineData.contains("@")) {
-					fileDataLinesList.add(lineData.trim());
-					continue;
-				}
-				if(fileDataLinesList.size()>0 ) {
-					fileDataLinesList.add(lineData.trim());
-					if(lineData.contains("X")) {
-						targetIndex = lineData.trim().indexOf("X");
-						break;
-					}
+				fileDataLinesList.add(lineData.trim());
+				//System.out.println("lineData.trim():"+lineData.trim().length());
+				if (cols < lineData.trim().length()) {
+					cols=lineData.trim().length();
 				}
 			}
-			//read and keep first line
-			firstLine = fileDataLinesList.get(0);
-			//read and keep last line
-			lastLine = fileDataLinesList.get(fileDataLinesList.size()-1);
-			
-			totalLines = fileDataLinesList.size();
-			List<List<Integer>> list1 = new ArrayList<>();
-			//list.add(new ArrayList<Integer>());
-			pathNumberCostMap.put(path_1, cost);
-			pathNumberFollowedTileMap.put(path_1,list1);
-			currentLine = fileDataLinesList.get(0);
-			
-			findPath(0, 0, 0,true);
-			
-			System.out.println(pathNumberCostMap);
-			System.out.println(pathNumberFollowedTileMap);
-			
-			int rowCount = 0 ;
-			/*for(List<List<Integer>> obj : pathNumberFollowedTileMap.values()) {
-				fileWriter.write("list count = "+rowCount+++" size = "+obj.size()+"\n");
+			//System.out.println("fileDataLinesList:"+fileDataLinesList.toString());
+			rows=fileDataLinesList.size();
+			System.out.println("rows:"+rows+",cols:"+cols);
+			myArray = new char[rows][cols];
+			destArray = new char[rows][cols];
+			/*for (int i = 0; i < myArray.length; i++) {
+				for (int k = 0; k < myArray.length; k++) {
+					System.out.print("("+i+","+k+")");
+				}
+				System.out.println("\n");
 			}*/
-			rowCount = 0 ;
-			for(List<Integer> list : pathNumberFollowedTileMap.get(pathNumberFollowedTileMap.size()-1)) {
-				String rowData = fileDataLinesList.get(rowCount);
-				for(Integer innerList : list) {
-					if( innerList  > 0) {
-						rowData = rowData.substring(0, innerList)+'#'+rowData.substring(innerList+1);
-					}else {
-						rowData ='#'+rowData.substring(innerList+1);
+			for (String string : fileDataLinesList) {
+				//System.out.println("string:"+string);
+				for (int i = 0; i < string.length(); i++) {
+				//System.out.println("i:"+j+"j:"+i+"char At:"+string.charAt(i));
+					myArray[j][i] = string.charAt(i);
+					if (string.charAt(i) == 'X') {
+						x2 = j;
+						y2 = i;
+					}
+					if (string.charAt(i) == '@') {
+						x1 = j;
+						y1 = i;
 					}
 				}
-				resultantfileDataLinesList.add(rowData);
-				rowCount++;
+				j++;
 			}
-			System.out.println("fileRows = "+fileDataLinesList.size() +", resultant rows = "+resultantfileDataLinesList.size());
-			for(String line : resultantfileDataLinesList) {
-				fileWriter.write(line);
-				fileWriter.write("\n");
-			}
-			
-			
+			System.out.println("x1:y1->("+x1+":"+y1+")  x2:y2->("+x2+":"+y2+")");
+			/*for (int i = 0; i < rows; i++) {
+				for (int k = 0; k < cols; k++) {
+					System.out.print(myArray[i][k] +" ");
+				}
+				System.out.println("\n");
+			}*/
+			findShortPath();
+			/*for (int i = 0; i < rows; i++) {
+				for (int k = 0; k < cols; k++) {
+					System.out.print(destArray[i][k] +" ");
+				}
+				System.out.println("\n");
+			}*/
 		}catch (Exception e) {
 			e.printStackTrace();
 		}finally {
@@ -131,171 +110,125 @@ public class AStarAlgorithm {
 		}
 	}
 
-	private void findPath(int j, int pathNumber,long cost , boolean lineChanged) {
-		boolean isFirstLine;
-		boolean isLastLine = false;
-		
-		System.out.println(pathNumberCostMap);
-		System.out.println(pathNumberFollowedTileMap);
-		try {
-			//Thread.sleep(1000);
-			for(;j<=totalLines-1;j++) {
-				currentLine = fileDataLinesList.get(j);
-				if(j==0) {
-					isFirstLine = true;
-				}else {
-					isFirstLine = false;
+	private void findShortPath() {
+		System.out.println("=============================================");
+		int currentLineNo = 0;
+		Boolean isDestFind = false;
+		//Boolean isCurrentLineMoved = false;
+		for (; currentLineNo < rows;) {
+			if (currentLineNo == 44) {
+				//System.out.println(Arrays.toString(destArray));
+				System.out.println("currentLineNo:"+currentLineNo);
+			}
+			System.out.println("currentLineNo:"+currentLineNo);
+			for (int j = 0; j < cols; j++) {
+				if (j==49) {
+					System.out.println("col:"+cols);
 				}
-				
-				if(j == (totalLines-1) ) {
-					isLastLine = true;
-				}
-				if(pathNumber == 103) {
-					System.out.println("found");
-				}
-				if(!isLastLine) {
-					nextLine = fileDataLinesList.get(j+1);
-				}
-				
-				if(isLastLine) {
-					findLowCostPathForEndLine(pathNumberCostMap.get(pathNumber), currentLine, currentLine, pathNumber);
+				if (!isDestFind) {
+					//System.out.println("isDestFind:"+isDestFind);
+					if (x1 == currentLineNo && y1 == j) {
+						x1 = currentLineNo;
+						y1 = j;
+						destArray[currentLineNo][j] = '#';
+						findTheCostOfSaroundingTiles();
+					}else{
+						try {
+							destArray[currentLineNo][j] = myArray[currentLineNo][j];
+							if (j == cols-1 && currentLineNo == x1) {
+								x1=x1+1;
+							}
+						} catch (Exception e) {
+							e.printStackTrace();
+							System.out.println("Exception:"+currentLineNo+",j:"+j);
+						}
+					}
+					if (x2 == currentLineNo && y2 == j) {
+						isDestFind = true;
+						
+					}
 				}else{
-					lineChanged = findLowCostPathFromNonZeroIndex(j,pathNumberCostMap.get(pathNumber),currentLine,nextLine,pathNumber,lineChanged);
-				}
-				if(isPathRemoved) {
-					isPathRemoved = false;
-					return;
-				}
-				if(pathFound) {
-					return;
-				}
-				if(lineChanged) {
-					if(isFirstLine) {
-						if(currentLine.contains("@")) {
-							currentLine.replaceFirst("@", "#");
-						}
+					if (myArray[currentLineNo][j] == 'X') {
+						destArray[currentLineNo][j] = '#';
+					}else {
+						destArray[currentLineNo][j] = myArray[currentLineNo][j];
 					}
-				}else {
-					if(isFirstLine) {
-						if(currentLine.contains("@")) {
-							currentLine.replaceFirst("@", "#");
-						}
+					if (j == cols-1 ) {
+						x1=x1+1;
 					}
-					j--;
 				}
 			}
-		}catch (Exception e) {
-			e.printStackTrace();
+			if (currentLineNo <= x1) {
+				currentLineNo++;
+				//isCurrentLineMoved = false;
+			}
+		}
+		
+	}
+
+	private void findTheCostOfSaroundingTiles() {
+		int currentLineRight = findCostOfCurrentLineNext(x1,y1+1);
+		int currentLineLeft = findCostOfCurrentLineNext(x1,y1-1);
+		int nextLineSamePos = findCostOfCurrentLineNext(x1+1,y1);
+		int nextLineRight = findCostOfCurrentLineNext(x1+1,y1+1);
+		int nextLineLeft = findCostOfCurrentLineNext(x1+1,y1-1);
+		int prevLineSamePos = findCostOfCurrentLineNext(x1-1,y1);
+		int PrevLineRight = findCostOfCurrentLineNext(x1-1,y1+1);
+		int prevLineLeft = findCostOfCurrentLineNext(x1-1,y1-1);
+		List<Integer> list = new ArrayList<Integer>();
+		list.add(currentLineRight);
+		list.add(currentLineLeft);
+		list.add(nextLineSamePos);
+		list.add(nextLineRight);
+		list.add(nextLineLeft);
+		list.add(prevLineSamePos);
+		list.add(PrevLineRight);
+		list.add(prevLineLeft);
+		int min = Collections.min(list);
+		if (currentLineRight == min) {
+			y1 = y1+1;
+		}else if (currentLineLeft == min) {
+			y1 = y1-1;
+		}else if (nextLineSamePos == min) {
+			x1 = x1+1;
+		}else if (nextLineRight == min) {
+			x1 = x1+1;
+			y1 = y1+1;
+		}else if (nextLineLeft == min) {
+			x1 = x1+1;
+			y1 = y1-1;
+		}else if (prevLineSamePos == min) {
+			x1 = x1-1;
+		}else if (PrevLineRight == min) {
+			x1 = x1-1;
+			y1 = y1+1;
+		} else if (prevLineLeft == min){
+			x1 = x1-1;
+			y1 = y1-1;
 		}
 	}
 
-	private void findLowCostPathForEndLine(long cost, String currentLine, String nextLine,int path) throws IOException {
-		boolean lineChanged2 = true;
-		if(targetIndex < nextLineStartIndex) {
-			while(true) {
-				char sameLineNextChar = currentLine.charAt(nextLineStartIndex-1);
-				long  sameLineNextCharCost = 0;
-				if(wakableElements.contains(sameLineNextChar)) {
-					sameLineNextCharCost = elementCostMap.get(sameLineNextChar);
-					sameLineNextCharCost = cost + sameLineNextCharCost;
-					long distanceToGoal = Math.abs( (nextLineStartIndex-1)- targetIndex) + Math.abs(0- 0 );
-					sameLineNextCharCost = sameLineNextCharCost + distanceToGoal;
+	private int findCostOfCurrentLineNext(int i, int j) {
+		int cost = 0;
+		if (i == -1 || i >= rows || j == -1 || j >= cols) {
+			cost = 999999;
+		}else{
+			try {
+				char nextChar = myArray[i][j];
+				if(wakableElements.contains(nextChar)) {
+					cost = elementCostMap.get(nextChar);
+					int distanceToGoal = Math.abs(i-x2) + Math.abs(j-y2);
+					cost = cost + distanceToGoal;
+				}else{
+					cost = 999999;
 				}
-				if(sameLineNextCharCost!=0) {
-					if(lineChanged2) {
-						lineChanged2 = false;
-						List<Integer> list1 = new ArrayList<>();
-						//List<List<Integer>> list2 = new ArrayList<>();
-						list1.add(nextLineStartIndex);
-						//list2.add(list1);
-						pathNumberFollowedTileMap.get(path).add(list1);
-					}else {
-						pathNumberFollowedTileMap.get(path).get(pathNumberFollowedTileMap.get(path).size()-1).add(nextLineStartIndex);
-					}
-					if(sameLineNextChar == 'X') {
-						pathFound = true;
-						break;
-					}
-					cost = cost+sameLineNextCharCost;
-					pathNumberCostMap.put(path,cost);
-				}else {
-					pathFound = false;
-					System.out.println("{before}size = "+pathNumberFollowedTileMap.size() + "   ,  "+pathNumberCostMap.size() );
-					pathNumberFollowedTileMap.remove(path);
-					pathNumberCostMap.remove(path);
-					System.out.println("{after}size = "+pathNumberFollowedTileMap.size() + "   ,  "+pathNumberCostMap.size() );
-					isPathRemoved = true;
-					break;
-				}
-				nextLineStartIndex--;
-			}
-		}else if(targetIndex > nextLineStartIndex) {
-			while(true) {
-				char sameLineNextChar = currentLine.charAt(nextLineStartIndex+1);
-				long  sameLineNextCharCost = 0;
-				if(wakableElements.contains(sameLineNextChar)) {
-					sameLineNextCharCost = elementCostMap.get(sameLineNextChar);
-					sameLineNextCharCost = cost + sameLineNextCharCost;
-					long distanceToGoal = Math.abs( (nextLineStartIndex+1)- targetIndex) + Math.abs(0- 0 );
-					sameLineNextCharCost = sameLineNextCharCost + distanceToGoal;
-				}
-				if(sameLineNextCharCost!=0) {
-					if(lineChanged2) {
-						lineChanged2 = false;
-						List<Integer> list1 = new ArrayList<>();
-						//List<List<Integer>> list2 = new ArrayList<>();
-						list1.add(nextLineStartIndex);
-						//list2.add(list1);
-						pathNumberFollowedTileMap.get(path).add(list1);
-					}else {
-						pathNumberFollowedTileMap.get(path).get(pathNumberFollowedTileMap.get(path).size()-1).add(nextLineStartIndex);
-					}
-					if(sameLineNextChar == 'X') {
-						System.out.println(" -------   found            -------"+path+"\n");
-						pathFound = true;
-						break;
-					}
-					cost = cost+sameLineNextCharCost;
-					pathNumberCostMap.put(path,cost);
-				}else {
-					pathFound = false;
-					//fileWriter.write(" ------- not  found            -------"+path+"\n");
-					System.out.println("{before}size = "+pathNumberFollowedTileMap.size() + "   ,  "+pathNumberCostMap.size() );
-					pathNumberFollowedTileMap.remove(path);
-					pathNumberCostMap.remove(path);
-					System.out.println("{after}size = "+pathNumberFollowedTileMap.size() + "   ,  "+pathNumberCostMap.size() );
-					isPathRemoved = true;
-					break;
-				}
-				nextLineStartIndex++;
-			}
-		}else {
-			char sameLineNextChar = currentLine.charAt(nextLineStartIndex);
-			if(sameLineNextChar == 'X') {
-				if(lineChanged2) {
-					lineChanged2 = false;
-					List<Integer> list1 = new ArrayList<>();
-					//List<List<Integer>> list2 = new ArrayList<>();
-					list1.add(nextLineStartIndex);
-					//list2.add(list1);
-					pathNumberFollowedTileMap.get(path).add(list1);
-				}else {
-					pathNumberFollowedTileMap.get(path).get(pathNumberFollowedTileMap.get(path).size()-1).add(nextLineStartIndex);
-				}
-				cost = cost+elementCostMap.get('X');
-				pathNumberCostMap.put(path,cost);
-				pathFound = true;
-			}else {
-				System.out.println("{before}size = "+pathNumberFollowedTileMap.size() + "   ,  "+pathNumberCostMap.size() );
-				pathNumberFollowedTileMap.remove(path);
-				pathNumberCostMap.remove(path);
-				System.out.println("{after}size = "+pathNumberFollowedTileMap.size() + "   ,  "+pathNumberCostMap.size() );
-				isPathRemoved = true;
+				
+			} catch (Exception e) {
+				e.printStackTrace();
+				System.out.println("Exception##findCostOfCurrentLineNext##i:"+i+",j:"+j);
 			}
 		}
-		
-		//currentLine = currentLine.replace("X", "#");
-		//pathFound = true;
+		return cost;
 	}
 
 	private static Map<Character, Integer> setElementCostMap() {
@@ -308,353 +241,4 @@ public class AStarAlgorithm {
 		return map;
 	}
 	
-	
-	
-	private boolean findLowCostPathFromNonZeroIndex(int i,long cost, String currentLine, String nextLine, int path, boolean isNewLine) throws IOException {
-			boolean lineChanged = false;
-			long movableTileCount = 0;
-			char sameLineNextChar = currentLine.length()-1>nextLineStartIndex?currentLine.charAt(nextLineStartIndex+1):'~';
-			//char sameLinePrevChar = currentLine.charAt(nextLineStartIndex-1);
-			char nextLineBelowChar = nextLine.charAt(nextLineStartIndex);
-			char nextLineNextChar = nextLine.length()-1>nextLineStartIndex?nextLine.charAt(nextLineStartIndex+1):'~';
-			char nextLinePrevChar = nextLine.length()-1>nextLineStartIndex-1 && nextLineStartIndex!=0 ?nextLine.charAt(nextLineStartIndex-1):'~';
-			long  sameLineNextCharCost = 0;
-			long  sameLinePrevCharCost = 0;
-			long  nextLineBelowCharCost = 0;
-			long  nextLineNextCharCost = 0;
-			long  nextLinePrevCharCost = 0;
-			long  sameLineNextCharScore = 0;
-			//long  sameLinePrevCharScore = 0;
-			long  nextLineBelowCharScore = 0;
-			long  nextLineNextCharScore = 0;
-			long  nextLinePrevCharScore = 0;
-			if(wakableElements.contains(sameLineNextChar)) {
-				sameLineNextCharCost = elementCostMap.get(sameLineNextChar);
-				sameLineNextCharCost = cost + sameLineNextCharCost;
-				long distanceToGoal = Math.abs((nextLineStartIndex+1)- targetIndex) + Math.abs(0- (totalLines-1-i) );
-				sameLineNextCharScore = sameLineNextCharCost + distanceToGoal;
-			}
-			if(wakableElements.contains(nextLineBelowChar)) {
-				nextLineBelowCharCost = elementCostMap.get(nextLineBelowChar);
-				nextLineBelowCharCost = cost + nextLineBelowCharCost;
-				long distanceToGoal = Math.abs(nextLineStartIndex- targetIndex) + Math.abs(0- (totalLines-1-(i+1)) );
-				nextLineBelowCharScore = nextLineBelowCharCost + distanceToGoal;
-			}
-			if(wakableElements.contains(nextLineNextChar)) {
-				nextLineNextCharCost = elementCostMap.get(nextLineNextChar);
-				nextLineNextCharCost = cost + nextLineNextCharCost;
-				long distanceToGoal = Math.abs( (nextLineStartIndex+1) - targetIndex) + Math.abs( 0- (totalLines-1-(i+1)) );
-				nextLineNextCharScore = nextLineNextCharCost + distanceToGoal;
-				//cost = cost + nextLineNextCharCost;
-			}
-			if(wakableElements.contains(nextLinePrevChar)) {
-				nextLinePrevCharCost = elementCostMap.get(nextLinePrevChar);
-				nextLinePrevCharCost = cost + nextLinePrevCharCost;
-				long distanceToGoal = Math.abs( (nextLineStartIndex-1) - targetIndex) + Math.abs( 0- (totalLines-1-(i+1)) );
-				nextLinePrevCharScore = nextLinePrevCharCost + distanceToGoal;
-			}
-			/*if(wakableElements.contains(sameLinePrevChar)) {
-				sameLinePrevCharCost = elementCostMap.get(sameLinePrevChar);
-				sameLinePrevCharCost = cost + sameLinePrevCharCost;
-				long distanceToGoal = Math.abs( (nextLineStartIndex-1) - targetIndex) + Math.abs( 0- (totalLines-1-(i+1)) );
-				sameLinePrevCharCost = sameLinePrevCharCost + distanceToGoal;
-			}*/
-			
-			if(nextLineBelowCharCost ==0 && sameLineNextCharCost==0 && nextLinePrevCharCost==0 && nextLineNextCharCost==0 && sameLinePrevCharCost==0) {
-				pathNumberFollowedTileMap.remove(path);
-				pathNumberCostMap.remove(path);
-				isPathRemoved = true;
-				return false;
-			}			
-			//currentLine = currentLine.substring(0,nextLineStartIndex)+"#"+currentLine.substring(nextLineStartIndex+1);
-			
-			int index = nextLineStartIndex;
-			if(sameLineNextCharScore!=0 && (sameLineNextCharScore < (nextLineBelowCharScore==0?999999999:nextLineBelowCharScore)) && sameLineNextCharScore <  (nextLineNextCharScore==0?999999999:nextLineNextCharScore) && sameLineNextCharScore <  (nextLinePrevCharScore==0?999999999:nextLinePrevCharScore)) {
-				lineChanged = false;
-				nextLineStartIndex++;
-				cost = sameLineNextCharCost;
-				pathNumberCostMap.put(path, cost);
-				addPathIndexesToMap(isNewLine, index, path, i);				
-			}else if(nextLineBelowCharScore != 0 && nextLineBelowCharScore < (sameLineNextCharScore==0?999999999:sameLineNextCharScore) && nextLineBelowCharScore <  (nextLineNextCharScore==0?999999999:nextLineNextCharScore) && nextLineBelowCharScore < (nextLinePrevCharScore==0?999999999:nextLinePrevCharScore)) {
-				lineChanged = true;
-				cost = nextLineBelowCharCost;
-				pathNumberCostMap.put(path, cost);
-				addPathIndexesToMap(isNewLine, index, path, i);
-			}else if(nextLineNextCharScore != 0 && nextLineNextCharScore < (sameLineNextCharScore==0?999999999:sameLineNextCharScore)  &&  nextLineNextCharScore < (nextLineBelowCharScore==0?999999999:nextLineBelowCharScore)  &&  nextLineNextCharScore < (nextLinePrevCharScore==0?999999999:nextLinePrevCharScore)) {
-				nextLineStartIndex++;
-				lineChanged = true;
-				cost = nextLineNextCharCost;
-				pathNumberCostMap.put(path, cost);
-				addPathIndexesToMap(isNewLine, index, path, i);
-			}else if(nextLinePrevCharScore !=0 && nextLinePrevCharScore < (sameLineNextCharScore==0?999999999:sameLineNextCharScore)  &&  nextLinePrevCharScore < (nextLineBelowCharScore==0?999999999:nextLineBelowCharScore)  &&  nextLinePrevCharScore <  (nextLineNextCharScore==0?999999999:nextLineNextCharScore) ) {
-				nextLineStartIndex--;
-				lineChanged = true;
-				cost = nextLinePrevCharCost;
-				pathNumberCostMap.put(path, cost);
-				addPathIndexesToMap(isNewLine, index, path, i);
-			}else if(sameLinePrevCharCost !=0) {
-				nextLineStartIndex--;
-				lineChanged = false;
-				cost = sameLinePrevCharCost;
-				pathNumberCostMap.put(path, cost);
-				addPathIndexesToMap(isNewLine, index, path, i);
-			}else {
-
-				if(nextLineBelowCharCost !=0) {
-					movableTileCount++;
-				}if(sameLineNextCharCost!=0) {
-					movableTileCount++;
-				}if(nextLinePrevCharCost!=0 ) {
-					movableTileCount++;
-				}if(nextLineNextCharCost!=0) {
-					movableTileCount++;
-				}if(sameLinePrevCharCost!=0) {
-					movableTileCount++;
-				}
-			
-				if(targetIndex >= nextLineStartIndex) {
-					if(nextLineNextCharCost != 0) {
-						addPathIndexesToMap(isNewLine, index, path, i);
-						nextLineStartIndex++;
-						lineChanged = true;
-						if(movableTileCount > 1) {
-							path++;
-							addNextPathToMap(path,cost);
-							findPath(i+1, path, cost, lineChanged);
-							nextLineStartIndex = index;
-							path--;
-							if(pathFound) {
-								return false;
-							}else {
-								removePathIndexesFromMap(isNewLine, index, path, i);
-							}
-						}
-						cost = nextLineNextCharCost;
-						pathNumberCostMap.put(path, cost);
-					}
-					if(nextLineBelowCharCost != 0) {
-						addPathIndexesToMap(isNewLine, index, path, i);
-						lineChanged = true;
-						if(movableTileCount > 1) {
-							path++;
-							addNextPathToMap(path,cost);
-							findPath(i+1, path, cost,lineChanged);
-							nextLineStartIndex = index;
-							path--;
-							if(pathFound) {
-								return false;
-							}else {
-								removePathIndexesFromMap(isNewLine, index, path, i);
-							}
-							
-						}
-						cost = nextLineBelowCharCost;
-						pathNumberCostMap.put(path, cost);
-					} 
-					
-					if(nextLinePrevCharCost !=0) {
-						addPathIndexesToMap(isNewLine, index, path, i);
-						nextLineStartIndex--;
-						lineChanged = true;
-						if(movableTileCount > 1) {
-							path++;
-							addNextPathToMap(path,cost);
-							findPath(i+1, path, cost, lineChanged);
-							nextLineStartIndex = index;
-							path--;
-							if(pathFound) {
-								return false;
-							}else {
-								removePathIndexesFromMap(isNewLine, index, path, i);
-							}
-							
-						}
-						cost = nextLinePrevCharCost;
-						pathNumberCostMap.put(path, cost);
-					}
-					
-					if(sameLineNextCharCost!=0) {
-						addPathIndexesToMap(isNewLine, index, path, i);
-						lineChanged = false;
-						nextLineStartIndex++;
-						if(movableTileCount > 1) {
-							path++;
-							addNextPathToMap(path,cost);
-							findPath(i, path, cost, lineChanged);
-							path--;
-							if(pathFound) {
-								return false;
-							}else {
-								removePathIndexesFromMap(isNewLine, index, path, i);
-							}
-							nextLineStartIndex = index;
-						}
-						cost = sameLineNextCharCost;
-						pathNumberCostMap.put(path, cost);
-						
-					} 
-				}else if(targetIndex < nextLineStartIndex) {
-					if(nextLinePrevCharCost !=0) {
-						addPathIndexesToMap(isNewLine, index, path, i);
-						nextLineStartIndex--;
-						lineChanged = true;
-						if(movableTileCount > 1) {
-							path++;
-							addNextPathToMap(path,cost);
-							findPath(i+1, path, cost, lineChanged);
-							nextLineStartIndex = index;
-							path--;
-							if(pathFound) {
-								return false;
-							}else {
-								removePathIndexesFromMap(isNewLine, index, path, i);
-							}
-						}
-						cost = nextLinePrevCharCost;
-						pathNumberCostMap.put(path, cost);
-					}
-					if(sameLinePrevCharCost !=0) {
-						addPathIndexesToMap(isNewLine, index, path, i);
-						nextLineStartIndex--;
-						lineChanged = false;
-						
-						if(movableTileCount > 1) {
-							path++;
-							addNextPathToMap(path,cost);
-							findPath(i, path, cost, lineChanged);
-							nextLineStartIndex = index;
-							path--;
-							if(pathFound) {
-								return false;
-							}else {
-								removePathIndexesFromMap(isNewLine, index, path, i);
-							}
-						}
-						cost = sameLinePrevCharCost;
-						pathNumberCostMap.put(path, cost);
-					}
-					if(nextLineBelowCharCost != 0) {
-						addPathIndexesToMap(isNewLine, index, path, i);
-						lineChanged = true;
-						if(movableTileCount > 1) {
-							path++;
-							addNextPathToMap(path,cost);
-							findPath(i+1, path, cost,lineChanged);
-							nextLineStartIndex = index;
-							path--;
-							if(pathFound) {
-								return false;
-							}else {
-								removePathIndexesFromMap(isNewLine, index, path, i);
-							}
-						}
-						cost = nextLineBelowCharCost;
-						pathNumberCostMap.put(path, cost);
-					} 
-					if(nextLineNextCharCost != 0) {
-						addPathIndexesToMap(isNewLine, index, path, i);
-						nextLineStartIndex++;
-						lineChanged = true;
-						if(movableTileCount > 1) {
-							path++;
-							addNextPathToMap(path,cost);
-							findPath(i+1, path, cost, lineChanged);
-							nextLineStartIndex = index;
-							path--;
-							if(pathFound) {
-								return false;
-							}else {
-								removePathIndexesFromMap(isNewLine, index, path, i);
-							}
-						}
-						cost = nextLineNextCharCost;
-						pathNumberCostMap.put(path, cost);
-					} 
-					if(sameLineNextCharCost!=0) {
-						addPathIndexesToMap(isNewLine, index, path, i);
-						lineChanged = false;
-						nextLineStartIndex++;
-						if(movableTileCount > 1) {
-							path++;
-							addNextPathToMap(path,cost);
-							findPath(i, path, cost, lineChanged);
-							path--;
-							if(pathFound) {
-								return false;
-							}else {
-								removePathIndexesFromMap(isNewLine, index, path, i);
-							}
-							nextLineStartIndex = index;
-						}
-						cost = sameLineNextCharCost;
-						pathNumberCostMap.put(path, cost);
-						
-					} 
-				}
-			}
-			System.out.println("scores = "+sameLineNextChar+":"+sameLineNextCharCost+" , "+nextLineBelowChar+":"+nextLineBelowCharCost+" , "+nextLineNextChar+":"+nextLineNextCharCost+" , "+nextLinePrevChar+":"+nextLinePrevCharCost);
-			return lineChanged;
-	}
-
-	
-
-	private void addNextPathToMap(int path,long cost) {
-		List<List<Integer>> list = new ArrayList<>();
-		for(List<Integer> innerList : pathNumberFollowedTileMap.get(path-1)) {
-			list.add(new ArrayList<>(innerList));
-		}
-		pathNumberCostMap.put(path, cost);
-		pathNumberFollowedTileMap.put(path,list);
-		System.out.println();
-	}
-	
-	private void addPathIndexesToMap(boolean isNewLine, int index, int path, int i) {
-		
-		try{
-			if(isNewLine) {
-				List<Integer> list1 = new ArrayList<>();
-				//List<List<Integer>> list2 = new ArrayList<>();
-				list1.add(index);
-				//list2.add(list1);
-				pathNumberFollowedTileMap.get(path).add(list1);
-				//fileWriter.write("added = "+i+" , index = "+index+"\n");
-			}else {
-				if(pathNumberFollowedTileMap.get(path).isEmpty()) {
-					List<Integer> list1 = new ArrayList<>();
-					list1.add(index);
-					pathNumberFollowedTileMap.get(path).add(list1);
-				}else {
-					pathNumberFollowedTileMap.get(path).get(pathNumberFollowedTileMap.get(path).size()-1).add(index);
-				}
-				//fileWriter.write("added = "+i+" , index = "+index+"\n");
-			}
-		}catch(Exception e) {
-			e.printStackTrace();
-		}
-	}
-
-	private void removePathIndexesFromMap(boolean isNewLine, int index, int path, int i) {
-		try{
-			if(isNewLine) {
-				List<Integer> list1 = new ArrayList<>();
-				//List<List<Integer>> list2 = new ArrayList<>();
-				list1.add(index);
-				//list2.add(list1);
-				pathNumberFollowedTileMap.get(path).remove(pathNumberFollowedTileMap.get(path).size()-1);
-				//fileWriter.write("removed = "+i+" , index = "+index+"\n");
-			}else {
-				if(pathNumberFollowedTileMap.get(path).isEmpty()) {
-					List<Integer> list1 = new ArrayList<>();
-					list1.add(index);
-					pathNumberFollowedTileMap.get(path).remove(pathNumberFollowedTileMap.get(path).size()-1);
-				}else {
-					pathNumberFollowedTileMap.get(path).get(pathNumberFollowedTileMap.get(path).size()-1).remove(pathNumberFollowedTileMap.get(path).get(pathNumberFollowedTileMap.get(path).size()-1).size()-1);
-				}
-				//fileWriter.write("removed = "+i+" , index = "+index+"\n");
-			}
-		}catch(Exception e) {
-			e.printStackTrace();
-		}
-	}
-		
 }
