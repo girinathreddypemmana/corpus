@@ -44,7 +44,6 @@ public class AStarAlgorithm {
 	int rows = 0;
 	int cols = 0;
 
-	// method to search small cost path
 	public void searchSmallCostPath(File largeMapFile, File targetFile) {
 		try {
 			// declare scanner pointing to source file to read content line by
@@ -65,7 +64,7 @@ public class AStarAlgorithm {
 			}
 			// System.out.println("fileDataLinesList:"+fileDataLinesList.toString());
 			rows = fileDataLinesList.size();
-			// System.out.println("rows:"+rows+",cols:"+cols);
+			System.out.println("rows:" + rows + ",cols:" + cols);
 			myArray = new char[rows][cols];
 			destArray = new char[rows][cols];
 			/*
@@ -90,15 +89,13 @@ public class AStarAlgorithm {
 				}
 				j++;
 			}
-			// System.out.println("x1:y1->("+x1+":"+y1+")
-			// x2:y2->("+x2+":"+y2+")");
+			System.out.println("x1:y1->(" + x1 + ":" + y1 + ")  x2:y2->(" + x2 + ":" + y2 + ")");
 			/*
 			 * for (int i = 0; i < rows; i++) { for (int k = 0; k < cols; k++) {
 			 * System.out.print(myArray[i][k] +" "); } System.out.println("\n");
 			 * }
 			 */
 			findShortPath();
-			// display the map data
 			for (int i = 0; i < rows; i++) {
 				for (int k = 0; k < cols; k++) {
 					System.out.print(destArray[i][k] + " ");
@@ -128,9 +125,8 @@ public class AStarAlgorithm {
 		}
 	}
 
-	// this method finds the short path
 	private void findShortPath() {
-		// System.out.println("=============================================");
+		System.out.println("=============================================");
 		int currentLineNo = 0;
 		Boolean isDestFind = false;
 		// Boolean isCurrentLineMoved = false;
@@ -158,10 +154,6 @@ public class AStarAlgorithm {
 						isDestFind = true;
 
 					}
-					if (y1 == cols - 1) {
-						findTheCostOfSaroundingTiles();
-						x1 = x1 + 1;
-					}
 				} else {
 					if (myArray[currentLineNo][j] == 'X') {
 						destArray[currentLineNo][j] = '#';
@@ -178,9 +170,9 @@ public class AStarAlgorithm {
 				// isCurrentLineMoved = false;
 			}
 		}
+
 	}
 
-	// this method finds the short path of each tile
 	private void findTheCostOfSaroundingTiles() {
 		int currentLineRight = findCostOfCurrentLineNext(x1, y1 + 1);
 		int currentLineLeft = findCostOfCurrentLineNext(x1, y1 - 1);
@@ -200,31 +192,29 @@ public class AStarAlgorithm {
 		list.add(PrevLineRight);
 		list.add(prevLineLeft);
 		int min = Collections.min(list);
-		if (currentLineRight == min) {
+		if (nextLineRight == min) {
+			x1 = x1 + 1;
 			y1 = y1 + 1;
-		} else if (currentLineLeft == min) {
-			y1 = y1 - 1;
+		} else if (currentLineRight == min) {
+			y1 = y1 + 1;
 		} else if (nextLineSamePos == min) {
 			x1 = x1 + 1;
-		} else if (nextLineRight == min) {
-			x1 = x1 + 1;
-			y1 = y1 + 1;
 		} else if (nextLineLeft == min) {
 			x1 = x1 + 1;
 			y1 = y1 - 1;
-		} else if (prevLineSamePos == min) {
-			x1 = x1 - 1;
+		} else if (currentLineLeft == min) {
+			y1 = y1 - 1;
 		} else if (PrevLineRight == min) {
 			x1 = x1 - 1;
 			y1 = y1 + 1;
+		} else if (prevLineSamePos == min) {
+			x1 = x1 - 1;
 		} else if (prevLineLeft == min) {
 			x1 = x1 - 1;
 			y1 = y1 - 1;
 		}
 	}
 
-	// finding the distance from source to goal by using Manhattan distance
-	// formula
 	private int findCostOfCurrentLineNext(int i, int j) {
 		int cost = 0;
 		if (i == -1 || i >= rows || j == -1 || j >= cols) {
@@ -248,7 +238,6 @@ public class AStarAlgorithm {
 		return cost;
 	}
 
-	// keeping elements and its values
 	private static Map<Character, Integer> setElementCostMap() {
 		Map<Character, Integer> map = new HashMap<>();
 		map.put('.', 1);
