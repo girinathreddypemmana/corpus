@@ -37,20 +37,25 @@ public class AStarAlgorithm {
 
 	char[][] myArray = null;
 	char[][] destArray = null;
+	// source x coordinate
 	int x1 = 0;
+	// destination x coordinate
 	int x2 = 0;
+	// source y coordinate
 	int y1 = 0;
+	// destination y coordinate
 	int y2 = 0;
+	// total rows of map
 	int rows = 0;
+	// total cols of map
 	int cols = 0;
 
-	public void searchSmallCostPath(File largeMapFile, File targetFile) {
+	public void searchSmallCostPath(File largeMapFile) {
 		try {
 			// declare scanner pointing to source file to read content line by
 			// line
 			sc = new Scanner(largeMapFile);
 
-			fileWriter = new FileWriter(targetFile);
 			// read all lines and keep them in list
 			fileDataLinesList = new ArrayList<String>();
 			int j = 0;
@@ -139,6 +144,9 @@ public class AStarAlgorithm {
 						y1 = j;
 						destArray[currentLineNo][j] = '#';
 						findTheCostOfSaroundingTiles();
+					} else if (x2 == currentLineNo && y2 == j) {
+						findTheCostOfSaroundingTiles();
+						isDestFind = true;
 					} else {
 						try {
 							destArray[currentLineNo][j] = myArray[currentLineNo][j];
@@ -150,16 +158,17 @@ public class AStarAlgorithm {
 							System.out.println("Exception:" + currentLineNo + ",j:" + j);
 						}
 					}
-					if (x2 == currentLineNo && y2 == j) {
-						isDestFind = true;
-
-					}
+					/*
+					 * if (x2 == currentLineNo && y2 == j) { isDestFind = true;
+					 * 
+					 * }
+					 */
 				} else {
-					if (myArray[currentLineNo][j] == 'X') {
-						destArray[currentLineNo][j] = '#';
-					} else {
-						destArray[currentLineNo][j] = myArray[currentLineNo][j];
-					}
+					/*
+					 * if (myArray[currentLineNo][j] == 'X') {
+					 * destArray[currentLineNo][j] = '#'; }else { }
+					 */
+					destArray[currentLineNo][j] = myArray[currentLineNo][j];
 					if (j == cols - 1) {
 						x1 = x1 + 1;
 					}
